@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PosterTyper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Inter:wght@400;500;700;900&family=Space+Mono:wght@400;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: #0c0c0c;
+    color: #999;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    height: 100vh;
+  }
+
+  /* ── Left Panel ── */
+  .controls {
+    padding: 36px 32px;
+    border-right: 1px solid #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    overflow-y: auto;
+    background: #0c0c0c;
+  }
+
+  .controls::-webkit-scrollbar { width: 0; }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  .sys-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #444;
+  }
+
+  label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #555;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 16px 18px;
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 4px;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus { border-color: #fff; }
+  textarea::placeholder { color: #333; }
+
+  /* Button groups */
+  .btn-row {
+    display: flex;
+    gap: 0;
+  }
+
+  .btn-option {
+    flex: 1;
+    padding: 12px 0;
+    background: transparent;
+    border: 1px solid #222;
+    color: #555;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .btn-option:first-child { border-radius: 4px 0 0 4px; }
+  .btn-option:last-child { border-radius: 0 4px 4px 0; }
+  .btn-option:not(:first-child) { border-left: none; }
+
+  .btn-option:hover { color: #aaa; background: #161616; }
+
+  .btn-option.active {
+    background: #fff;
+    border-color: #fff;
+    color: #0c0c0c;
+  }
+
+  /* Alignment buttons */
+  .align-row {
+    display: flex;
+    gap: 0;
+  }
+
+  .align-option {
+    width: 48px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #222;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.15s;
+  }
+
+  .align-option:first-child { border-radius: 4px 0 0 4px; }
+  .align-option:last-child { border-radius: 0 4px 4px 0; }
+  .align-option:not(:first-child) { border-left: none; }
+
+  .align-option:hover { color: #aaa; }
+  .align-option.active { background: #fff; border-color: #fff; color: #0c0c0c; }
+  .align-option svg { width: 14px; height: 14px; }
+
+  /* Color row */
+  .color-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .color-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .color-dot:hover { transform: scale(1.15); }
+  .color-dot.active { border-color: #fff; box-shadow: 0 0 0 2px #0c0c0c, 0 0 0 4px #fff; }
+
+  .color-custom-wrap {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px dashed #333;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .color-custom-wrap span { font-size: 12px; color: #444; pointer-events: none; }
+  .color-custom-wrap input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  /* Stats */
+  .stats-row {
+    display: flex;
+    gap: 24px;
+    padding: 16px 0;
+    border-top: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .stat-item { display: flex; flex-direction: column; gap: 4px; }
+
+  .stat-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-lbl {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #444;
+  }
+
+  /* Export */
+  .export-section {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-top: 1px solid #1a1a1a;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .export-section:hover { color: #fff; }
+  .export-section:hover .arrow-icon { color: #fff; }
+
+  .export-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #999;
+  }
+
+  .arrow-icon {
+    color: #444;
+    font-size: 16px;
+    transition: color 0.15s;
+  }
+
+  .credit {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: #333;
+    letter-spacing: 0.08em;
+  }
+
+  .credit a { color: #444; text-decoration: none; }
+  .credit a:hover { color: #888; }
+
+  /* ── Right Panel: Preview ── */
+  .preview-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    background: #111;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-wrap {
+    position: relative;
+    filter: drop-shadow(0 20px 60px rgba(0,0,0,0.6));
+  }
+
+  .page {
+    background: #fff;
+    position: relative;
+    overflow: hidden;
+    transition: width 0.3s ease, height 0.3s ease;
+  }
+
+  /* Poster decorations */
+  .poster-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .poster-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #999;
+  }
+
+  .poster-circle {
+    position: absolute;
+    top: 50%;
+    left: 55%;
+    transform: translate(-50%, -50%);
+    width: 45%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 0.5px solid rgba(0,0,0,0.08);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .poster-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .poster-credits {
+    font-family: 'DM Mono', monospace;
+    font-size: 6px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #aaa;
+    line-height: 1.8;
+  }
+
+  .poster-credits-right {
+    font-family: 'DM Mono', monospace;
+    font-size: 6px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #aaa;
+    line-height: 1.8;
+    text-align: right;
+  }
+
+  .page-text {
+    color: #0a0a0a;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 8% 6%;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    position: relative;
+    z-index: 3;
+  }
+
+  .page-text.align-left { justify-content: flex-start; text-align: left; }
+  .page-text.align-center { justify-content: center; text-align: center; }
+  .page-text.align-right { justify-content: flex-end; text-align: right; }
+
+  .empty-state {
+    color: #ccc;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    text-align: center;
+    line-height: 1.6;
+    opacity: 0.4;
+  }
+
+  .fit-badge {
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #444;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .fit-badge .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #22c55e;
+  }
+
+  /* Loading */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: #0c0c0c;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: opacity 0.4s;
+  }
+
+  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+  .loading-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #444;
+    letter-spacing: 0.1em;
+    margin-top: 16px;
+  }
+
+  .spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #222;
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 800px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .controls { border-right: none; border-bottom: 1px solid #1a1a1a; max-height: 45vh; }
+    .preview-area { padding: 24px; }
+    .poster-top, .poster-bottom { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Initializing engine...</div>
+</div>
+
+<div class="app">
+  <div class="controls">
+    <div class="header">
+      <div class="logo">POSTERTYPER</div>
+      <div class="sys-label">SYS.01 // ENGINE</div>
+    </div>
+
+    <div>
+      <label>Source Message</label>
+      <textarea id="textInput" placeholder="Beautiful Destinations" spellcheck="false"></textarea>
+    </div>
+
+    <div>
+      <label>Typeface</label>
+      <div class="btn-row" id="fontGroup">
+        <button class="btn-option active" data-font="'Syne', sans-serif" data-weight="800">Sans</button>
+        <button class="btn-option" data-font="'Playfair Display', serif" data-weight="900">Serif</button>
+        <button class="btn-option" data-font="'Space Mono', monospace" data-weight="700">Mono</button>
+      </div>
+    </div>
+
+    <div>
+      <label>Style Variant</label>
+      <div class="btn-row" id="variantGroup">
+        <button class="btn-option active" data-font="'Syne', sans-serif" data-weight="800" data-style="normal">Bold</button>
+        <button class="btn-option" data-font="'Instrument Serif', serif" data-weight="400" data-style="italic">Italic</button>
+        <button class="btn-option" data-font="'Bebas Neue', sans-serif" data-weight="400" data-style="normal">Tall</button>
+        <button class="btn-option" data-font="'Libre Baskerville', serif" data-weight="400" data-style="normal">Classic</button>
+      </div>
+    </div>
+
+    <div>
+      <label>Alignment</label>
+      <div class="align-row" id="alignGroup">
+        <button class="align-option active" data-align="left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 10H3M21 6H3M21 14H3M17 18H3"/></svg>
+        </button>
+        <button class="align-option" data-align="center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10H6M21 6H3M21 14H3M18 18H6"/></svg>
+        </button>
+        <button class="align-option" data-align="right">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10H7M21 6H3M21 14H3M21 18H7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <label>Ink Color</label>
+      <div class="color-row" id="colorGroup">
+        <div class="color-dot active" data-color="#0a0a0a" style="background:#0a0a0a; border: 1px solid #333;"></div>
+        <div class="color-dot" data-color="#1a1a6e" style="background:#1a1a6e"></div>
+        <div class="color-dot" data-color="#8b1a1a" style="background:#8b1a1a"></div>
+        <div class="color-dot" data-color="#1a4a2a" style="background:#1a4a2a"></div>
+        <div class="color-dot" data-color="#5a3e28" style="background:#5a3e28"></div>
+        <div class="color-custom-wrap">
+          <span>+</span>
+          <input type="color" id="customColor" value="#0a0a0a">
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-num" id="fontSizeStat">&mdash;</div>
+        <div class="stat-lbl">Font Size</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="linesStat">&mdash;</div>
+        <div class="stat-lbl">Lines</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="fillStat">&mdash;</div>
+        <div class="stat-lbl">Fill %</div>
+      </div>
+    </div>
+
+    <div>
+      <label>Paper</label>
+      <div class="btn-row" id="sizeGroup">
+        <button class="btn-option active" data-w="210" data-h="297">A4</button>
+        <button class="btn-option" data-w="216" data-h="279">Letter</button>
+        <button class="btn-option" data-w="297" data-h="420">A3</button>
+        <button class="btn-option" data-w="297" data-h="210">Wide</button>
+      </div>
+    </div>
+
+    <div class="export-section" id="exportBtn">
+      <span class="export-label">Print Sequence</span>
+      <span class="arrow-icon">&nearr;</span>
+    </div>
+
+    <div class="credit">
+      Powered by <a href="https://github.com/chenglou/pretext" target="_blank">Pretext</a> &mdash; DOM-free text engine
+    </div>
+  </div>
+
+  <div class="preview-area">
+    <div class="page-wrap">
+      <div class="page" id="page">
+        <div class="poster-top">
+          <span class="poster-tag">Explore</span>
+          <span class="poster-tag" id="yearTag">2026</span>
+        </div>
+        <div class="poster-circle"></div>
+        <div class="page-text align-left" id="pageText">
+          <span class="empty-state">Type a message<br>to begin</span>
+        </div>
+        <div class="poster-bottom">
+          <div class="poster-credits">
+            Design&emsp;&emsp;Studio<br>
+            Typography&emsp;&emsp;Dynamic<br>
+            System&emsp;&emsp;PosterTyper v1
+          </div>
+          <div class="poster-credits-right" id="creditsRight">
+            Credits<br>
+            &mdash;
+          </div>
+        </div>
+      </div>
+      <div class="fit-badge">
+        <span class="dot"></span>
+        <span id="fitLabel">Fits on 1 page</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Pretext by Cheng Lou (https://github.com/chenglou/pretext) -->
+<script>
+var Pretext=(()=>{var ie=Object.defineProperty;var Je=Object.getOwnPropertyDescriptor;var Qe=Object.getOwnPropertyNames;var $e=Object.prototype.hasOwnProperty;var Ue=(e,t)=>{for(var n in t)ie(e,n,{get:t[n],enumerable:!0})},_e=(e,t,n,u)=>{if(t&&typeof t=="object"||typeof t=="function")for(let s of Qe(t))!$e.call(e,s)&&s!==n&&ie(e,s,{get:()=>t[s],enumerable:!(u=Je(t,s))||u.enumerable});return e};var qe=e=>_e(ie({},"__esModule",{value:!0}),e);var cn={};Ue(cn,{clearCache:()=>Ke,layout:()=>Xt,layoutNextLine:()=>un,layoutWithLines:()=>on,prepare:()=>Zt,prepareWithSegments:()=>Vt,profilePrepare:()=>qt,setLocale:()=>ln,walkLineRanges:()=>sn});var Ze=["BN","BN","BN","BN","BN","BN","BN","BN","BN","S","B","S","WS","B","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","B","B","B","S","WS","ON","ON","ET","ET","ET","ON","ON","ON","ON","ON","ON","CS","ON","CS","ON","EN","EN","EN","EN","EN","EN","EN","EN","EN","EN","ON","ON","ON","ON","ON","ON","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","ON","ON","ON","ON","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","ON","ON","ON","BN","BN","BN","BN","BN","BN","B","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","CS","ON","ET","ET","ET","ET","ON","ON","ON","ON","L","ON","ON","ON","ON","ON","ET","ET","EN","EN","ON","L","ON","ON","ON","EN","L","ON","ON","ON","ON","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","L","L","L","L","L","L","L","L"],Ve=["AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","CS","AL","ON","ON","NSM","NSM","NSM","NSM","NSM","NSM","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","AL","AL","AL","AL","AL","AL","AL","AN","AN","AN","AN","AN","AN","AN","AN","AN","AN","ET","AN","AN","AL","AL","AL","NSM","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","ON","NSM","NSM","NSM","NSM","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL"];function Xe(e){return e<=255?Ze[e]:1424<=e&&e<=1524?"R":1536<=e&&e<=1791?Ve[e&255]:1792<=e&&e<=2220?"AL":"L"}function Ye(e){let t=e.length;if(t===0)return null;let n=new Array(t),u=0;for(let i=0;i<t;i++){let l=Xe(e.charCodeAt(i));(l==="R"||l==="AL"||l==="AN")&&u++,n[i]=l}if(u===0)return null;let s=t/u<.3?0:1,r=new Int8Array(t);for(let i=0;i<t;i++)r[i]=s;let o=s&1?"R":"L",c=o,d=c;for(let i=0;i<t;i++)n[i]==="NSM"?n[i]=d:d=n[i];d=c;for(let i=0;i<t;i++){let l=n[i];l==="EN"?n[i]=d==="AL"?"AN":"EN":(l==="R"||l==="L"||l==="AL")&&(d=l)}for(let i=0;i<t;i++)n[i]==="AL"&&(n[i]="R");for(let i=1;i<t-1;i++)n[i]==="ES"&&n[i-1]==="EN"&&n[i+1]==="EN"&&(n[i]="EN"),n[i]==="CS"&&(n[i-1]==="EN"||n[i-1]==="AN")&&n[i+1]===n[i-1]&&(n[i]=n[i-1]);for(let i=0;i<t;i++){if(n[i]!=="EN")continue;let l;for(l=i-1;l>=0&&n[l]==="ET";l--)n[l]="EN";for(l=i+1;l<t&&n[l]==="ET";l++)n[l]="EN"}for(let i=0;i<t;i++){let l=n[i];(l==="WS"||l==="ES"||l==="ET"||l==="CS")&&(n[i]="ON")}d=c;for(let i=0;i<t;i++){let l=n[i];l==="EN"?n[i]=d==="L"?"L":"EN":(l==="R"||l==="L")&&(d=l)}for(let i=0;i<t;i++){if(n[i]!=="ON")continue;let l=i+1;for(;l<t&&n[l]==="ON";)l++;let k=i>0?n[i-1]:c,f=l<t?n[l]:c,a=k!=="L"?"R":"L";if(a===(f!=="L"?"R":"L"))for(let N=i;N<l;N++)n[N]=a;i=l-1}for(let i=0;i<t;i++)n[i]==="ON"&&(n[i]=o);for(let i=0;i<t;i++){let l=n[i];(r[i]&1)===0?l==="R"?r[i]++:(l==="AN"||l==="EN")&&(r[i]+=2):(l==="L"||l==="AN"||l==="EN")&&r[i]++}return r}function ke(e,t){let n=Ye(e);if(n===null)return null;let u=new Int8Array(t.length);for(let s=0;s<t.length;s++)u[s]=n[t[s]];return u}var et=/[ \t\n\r\f]+/g,tt=/[\t\n\r\f]| {2,}|^ | $/;function nt(e){let t=e??"normal";return t==="pre-wrap"?{mode:t,preserveOrdinarySpaces:!0,preserveHardBreaks:!0}:{mode:t,preserveOrdinarySpaces:!1,preserveHardBreaks:!1}}function rt(e){if(!tt.test(e))return e;let t=e.replace(et," ");return t.charCodeAt(0)===32&&(t=t.slice(1)),t.length>0&&t.charCodeAt(t.length-1)===32&&(t=t.slice(0,-1)),t}function it(e){return/[\r\f]/.test(e)?e.replace(/\r\n/g,`
+`).replace(/[\r\f]/g,`
+`):e.replace(/\r\n/g,`
+`)}var q=null,se;function st(){return q===null&&(q=new Intl.Segmenter(se,{granularity:"word"})),q}function me(){q=null}function Be(e){let t=e&&e.length>0?e:void 0;se!==t&&(se=t,q=null)}var ut=/\p{Script=Arabic}/u,ee=/\p{M}/u,We=/\p{Nd}/u;function ue(e){return ut.test(e)}function D(e){for(let t of e){let n=t.codePointAt(0);if(n>=19968&&n<=40959||n>=13312&&n<=19903||n>=131072&&n<=173791||n>=173824&&n<=177983||n>=177984&&n<=178207||n>=178208&&n<=183983||n>=183984&&n<=191471||n>=196608&&n<=201551||n>=63744&&n<=64255||n>=194560&&n<=195103||n>=12288&&n<=12351||n>=12352&&n<=12447||n>=12448&&n<=12543||n>=44032&&n<=55215||n>=65280&&n<=65519)return!0}return!1}var ce=new Set(["\uFF0C","\uFF0E","\uFF01","\uFF1A","\uFF1B","\uFF1F","\u3001","\u3002","\u30FB","\uFF09","\u3015","\u3009","\u300B","\u300D","\u300F","\u3011","\u3017","\u3019","\u301B","\u30FC","\u3005","\u303B","\u309D","\u309E","\u30FD","\u30FE"]),Z=new Set(['"',"(","[","{","\u201C","\u2018","\xAB","\u2039","\uFF08","\u3014","\u3008","\u300A","\u300C","\u300E","\u3010","\u3016","\u3018","\u301A"]),fe=new Set(["'","\u2019"]),$=new Set([".",",","!","?",":",";","\u060C","\u061B","\u061F","\u0964","\u0965","\u104A","\u104B","\u104C","\u104D","\u104F",")","]","}","%",'"',"\u201D","\u2019","\xBB","\u203A","\u2026"]),ot=new Set([":",".","\u060C","\u061B"]),lt=new Set(["\u104F"]),ct=new Set(["\u201D","\u2019","\xBB","\u203A","\u300D","\u300F","\u3011","\u300B","\u3009","\u3015","\uFF09"]);function ft(e){if(ae(e))return!0;let t=!1;for(let n of e){if($.has(n)){t=!0;continue}if(!(t&&ee.test(n)))return!1}return t}function at(e){for(let t of e)if(!ce.has(t)&&!$.has(t))return!1;return e.length>0}function ht(e){if(ae(e))return!0;for(let t of e)if(!Z.has(t)&&!fe.has(t)&&!ee.test(t))return!1;return e.length>0}function ae(e){let t=!1;for(let n of e)if(!(n==="\\"||ee.test(n))){if(Z.has(n)||$.has(n)||fe.has(n)){t=!0;continue}return!1}return t}function dt(e){let t=Array.from(e),n=t.length;for(;n>0;){let u=t[n-1];if(ee.test(u)){n--;continue}if(Z.has(u)||fe.has(u)){n--;continue}break}return n<=0||n===t.length?null:{head:t.slice(0,n).join(""),tail:t.slice(n).join("")}}function Lt(e,t){if(e.length===0)return!1;for(let n of e)if(n!==t)return!1;return!0}function pt(e){return!ue(e)||e.length===0?!1:ot.has(e[e.length-1])}function gt(e){return e.length===0?!1:lt.has(e[e.length-1])}function At(e){if(e.length<2||e[0]!==" ")return null;let t=e.slice(1);return/^\p{M}+$/u.test(t)?{space:" ",marks:t}:null}function he(e){for(let t=e.length-1;t>=0;t--){let n=e[t];if(ct.has(n))return!0;if(!$.has(n))return!1}return!1}function xt(e,t){if(t.preserveOrdinarySpaces||t.preserveHardBreaks){if(e===" ")return"preserved-space";if(e==="	")return"tab";if(t.preserveHardBreaks&&e===`
+`)return"hard-break"}return e===" "?"space":e==="\xA0"||e==="\u202F"||e==="\u2060"||e==="\uFEFF"?"glue":e==="\u200B"?"zero-width-break":e==="\xAD"?"soft-hyphen":"text"}function St(e,t,n,u){let s=[],r=null,o="",c=n,d=!1,i=0;for(let l of e){let k=xt(l,u),f=k==="text"&&t;if(r!==null&&k===r&&f===d){o+=l,i+=l.length;continue}r!==null&&s.push({text:o,isWordLike:d,kind:r,start:c}),r=k,o=l,c=n+i,d=f,i+=l.length}return r!==null&&s.push({text:o,isWordLike:d,kind:r,start:c}),s}function oe(e){return e==="space"||e==="preserved-space"||e==="zero-width-break"||e==="hard-break"}var kt=/^[A-Za-z][A-Za-z0-9+.-]*:$/;function Nt(e,t){let n=e.texts[t];return n.startsWith("www.")?!0:kt.test(n)&&t+1<e.len&&e.kinds[t+1]==="text"&&e.texts[t+1]==="//"}function mt(e){return e.includes("?")&&(e.includes("://")||e.startsWith("www."))}function Bt(e){let t=e.texts.slice(),n=e.isWordLike.slice(),u=e.kinds.slice(),s=e.starts.slice();for(let o=0;o<e.len;o++){if(u[o]!=="text"||!Nt(e,o))continue;let c=o+1;for(;c<e.len&&!oe(u[c]);){t[o]+=t[c],n[o]=!0;let d=t[c].includes("?");if(u[c]="text",t[c]="",c++,d)break}}let r=0;for(let o=0;o<t.length;o++){let c=t[o];c.length!==0&&(r!==o&&(t[r]=c,n[r]=n[o],u[r]=u[o],s[r]=s[o]),r++)}return t.length=r,n.length=r,u.length=r,s.length=r,{len:r,texts:t,isWordLike:n,kinds:u,starts:s}}function Wt(e){let t=[],n=[],u=[],s=[];for(let r=0;r<e.len;r++){let o=e.texts[r];if(t.push(o),n.push(e.isWordLike[r]),u.push(e.kinds[r]),s.push(e.starts[r]),!mt(o))continue;let c=r+1;if(c>=e.len||oe(e.kinds[c]))continue;let d="",i=e.starts[c],l=c;for(;l<e.len&&!oe(e.kinds[l]);)d+=e.texts[l],l++;d.length>0&&(t.push(d),n.push(!0),u.push("text"),s.push(i),r=l-1)}return{len:t.length,texts:t,isWordLike:n,kinds:u,starts:s}}var Et=new Set([":","-","/","\xD7",",",".","+","\u2013","\u2014"]),Ne=/^[A-Za-z0-9_]+[,:;]*$/,Ft=/[,:;]+$/;function Ee(e){for(let t of e)if(We.test(t))return!0;return!1}function le(e){if(e.length===0)return!1;for(let t of e)if(!(We.test(t)||Et.has(t)))return!1;return!0}function wt(e){let t=[],n=[],u=[],s=[];for(let r=0;r<e.len;r++){let o=e.texts[r],c=e.kinds[r];if(c==="text"&&le(o)&&Ee(o)){let d=o,i=r+1;for(;i<e.len&&e.kinds[i]==="text"&&le(e.texts[i]);)d+=e.texts[i],i++;t.push(d),n.push(!0),u.push("text"),s.push(e.starts[r]),r=i-1;continue}t.push(o),n.push(e.isWordLike[r]),u.push(c),s.push(e.starts[r])}return{len:t.length,texts:t,isWordLike:n,kinds:u,starts:s}}function bt(e){let t=[],n=[],u=[],s=[];for(let r=0;r<e.len;r++){let o=e.texts[r],c=e.kinds[r],d=e.isWordLike[r];if(c==="text"&&d&&Ne.test(o)){let i=o,l=r+1;for(;Ft.test(i)&&l<e.len&&e.kinds[l]==="text"&&e.isWordLike[l]&&Ne.test(e.texts[l]);)i+=e.texts[l],l++;t.push(i),n.push(!0),u.push("text"),s.push(e.starts[r]),r=l-1;continue}t.push(o),n.push(d),u.push(c),s.push(e.starts[r])}return{len:t.length,texts:t,isWordLike:n,kinds:u,starts:s}}function Ct(e){let t=[],n=[],u=[],s=[];for(let r=0;r<e.len;r++){let o=e.texts[r];if(e.kinds[r]==="text"&&o.includes("-")){let c=o.split("-"),d=c.length>1;for(let i=0;i<c.length;i++){let l=c[i];if(!d)break;(l.length===0||!Ee(l)||!le(l))&&(d=!1)}if(d){let i=0;for(let l=0;l<c.length;l++){let k=c[l],f=l<c.length-1?`${k}-`:k;t.push(f),n.push(!0),u.push("text"),s.push(e.starts[r]+i),i+=f.length}continue}}t.push(o),n.push(e.isWordLike[r]),u.push(e.kinds[r]),s.push(e.starts[r])}return{len:t.length,texts:t,isWordLike:n,kinds:u,starts:s}}function yt(e){let t=[],n=[],u=[],s=[],r=0;for(;r<e.len;){let o=e.texts[r],c=e.isWordLike[r],d=e.kinds[r],i=e.starts[r];if(d==="glue"){let l=o,k=i;for(r++;r<e.len&&e.kinds[r]==="glue";)l+=e.texts[r],r++;if(r<e.len&&e.kinds[r]==="text")o=l+e.texts[r],c=e.isWordLike[r],d="text",i=k,r++;else{t.push(l),n.push(!1),u.push("glue"),s.push(k);continue}}else r++;if(d==="text")for(;r<e.len&&e.kinds[r]==="glue";){let l="";for(;r<e.len&&e.kinds[r]==="glue";)l+=e.texts[r],r++;if(r<e.len&&e.kinds[r]==="text"){o+=l+e.texts[r],c=c||e.isWordLike[r],r++;continue}o+=l}t.push(o),n.push(c),u.push(d),s.push(i)}return{len:t.length,texts:t,isWordLike:n,kinds:u,starts:s}}function Pt(e){let t=e.texts.slice(),n=e.isWordLike.slice(),u=e.kinds.slice(),s=e.starts.slice();for(let r=0;r<t.length-1;r++){if(u[r]!=="text"||u[r+1]!=="text"||!D(t[r])||!D(t[r+1]))continue;let o=dt(t[r]);o!==null&&(t[r]=o.head,t[r+1]=o.tail+t[r+1],s[r+1]=s[r]+o.head.length)}return{len:t.length,texts:t,isWordLike:n,kinds:u,starts:s}}function Mt(e,t,n){let u=st(),s=0,r=[],o=[],c=[],d=[];for(let f of u.segment(e))for(let a of St(f.segment,f.isWordLike??!1,f.index,n)){let W=a.kind==="text";t.carryCJKAfterClosingQuote&&W&&s>0&&c[s-1]==="text"&&D(a.text)&&D(r[s-1])&&he(r[s-1])||W&&s>0&&c[s-1]==="text"&&at(a.text)&&D(r[s-1])||W&&s>0&&c[s-1]==="text"&&gt(r[s-1])?(r[s-1]+=a.text,o[s-1]=o[s-1]||a.isWordLike):W&&s>0&&c[s-1]==="text"&&a.isWordLike&&ue(a.text)&&pt(r[s-1])?(r[s-1]+=a.text,o[s-1]=!0):W&&!a.isWordLike&&s>0&&c[s-1]==="text"&&a.text.length===1&&a.text!=="-"&&a.text!=="\u2014"&&Lt(r[s-1],a.text)||W&&!a.isWordLike&&s>0&&c[s-1]==="text"&&(ft(a.text)||a.text==="-"&&o[s-1])?r[s-1]+=a.text:(r[s]=a.text,o[s]=a.isWordLike,c[s]=a.kind,d[s]=a.start,s++)}for(let f=1;f<s;f++)c[f]==="text"&&!o[f]&&ae(r[f])&&c[f-1]==="text"&&(r[f-1]+=r[f],o[f-1]=o[f-1]||o[f],r[f]="");for(let f=s-2;f>=0;f--)if(c[f]==="text"&&!o[f]&&ht(r[f])){let a=f+1;for(;a<s&&r[a]==="";)a++;a<s&&c[a]==="text"&&(r[a]=r[f]+r[a],d[a]=d[f],r[f]="")}let i=0;for(let f=0;f<s;f++){let a=r[f];a.length!==0&&(i!==f&&(r[i]=a,o[i]=o[f],c[i]=c[f],d[i]=d[f]),i++)}r.length=i,o.length=i,c.length=i,d.length=i;let l=yt({len:i,texts:r,isWordLike:o,kinds:c,starts:d}),k=Pt(bt(Ct(wt(Wt(Bt(l))))));for(let f=0;f<k.len-1;f++){let a=At(k.texts[f]);a!==null&&(k.kinds[f]!=="space"&&k.kinds[f]!=="preserved-space"||k.kinds[f+1]!=="text"||!ue(k.texts[f+1])||(k.texts[f]=a.space,k.isWordLike[f]=!1,k.kinds[f]=k.kinds[f]==="preserved-space"?"preserved-space":"space",k.texts[f+1]=a.marks+k.texts[f+1],k.starts[f+1]=k.starts[f]+a.space.length))}return k}function Ot(e,t){if(e.len===0)return[];if(!t.preserveHardBreaks)return[{startSegmentIndex:0,endSegmentIndex:e.len,consumedEndSegmentIndex:e.len}];let n=[],u=0;for(let s=0;s<e.len;s++)e.kinds[s]==="hard-break"&&(n.push({startSegmentIndex:u,endSegmentIndex:s,consumedEndSegmentIndex:s+1}),u=s+1);return u<e.len&&n.push({startSegmentIndex:u,endSegmentIndex:e.len,consumedEndSegmentIndex:e.len}),n}function de(e,t,n="normal"){let u=nt(n),s=u.mode==="pre-wrap"?it(e):rt(e);if(s.length===0)return{normalized:s,chunks:[],len:0,texts:[],isWordLike:[],kinds:[],starts:[]};let r=Mt(s,t,u);return{normalized:s,chunks:Ot(r,u),...r}}var U=null,Le=new Map,_=null,vt=/\p{Emoji_Presentation}/u,It=/[\p{Emoji_Presentation}\p{Extended_Pictographic}\p{Regional_Indicator}\uFE0F\u20E3]/u,te=null,pe=new Map;function ge(){if(U!==null)return U;if(typeof OffscreenCanvas<"u")return U=new OffscreenCanvas(1,1).getContext("2d"),U;if(typeof document<"u")return U=document.createElement("canvas").getContext("2d"),U;throw new Error("Text measurement requires OffscreenCanvas or a DOM canvas context.")}function Rt(e){let t=Le.get(e);return t||(t=new Map,Le.set(e,t)),t}function K(e,t){let n=t.get(e);return n===void 0&&(n={width:ge().measureText(e).width,containsCJK:D(e)},t.set(e,n)),n}function H(){if(_!==null)return _;if(typeof navigator>"u")return _={lineFitEpsilon:.005,carryCJKAfterClosingQuote:!1,preferPrefixWidthsForBreakableRuns:!1,preferEarlySoftHyphenBreak:!1},_;let e=navigator.userAgent,n=navigator.vendor==="Apple Computer, Inc."&&e.includes("Safari/")&&!e.includes("Chrome/")&&!e.includes("Chromium/")&&!e.includes("CriOS/")&&!e.includes("FxiOS/")&&!e.includes("EdgiOS/"),u=e.includes("Chrome/")||e.includes("Chromium/")||e.includes("CriOS/")||e.includes("Edg/");return _={lineFitEpsilon:n?1/64:.005,carryCJKAfterClosingQuote:u,preferPrefixWidthsForBreakableRuns:n,preferEarlySoftHyphenBreak:n},_}function Tt(e){let t=e.match(/(\d+(?:\.\d+)?)\s*px/);return t?parseFloat(t[1]):16}function Ae(){return te===null&&(te=new Intl.Segmenter(void 0,{granularity:"grapheme"})),te}function Gt(e){return vt.test(e)||e.includes("\uFE0F")}function Fe(e){return It.test(e)}function jt(e,t){let n=pe.get(e);if(n!==void 0)return n;let u=ge();u.font=e;let s=u.measureText("\u{1F600}").width;if(n=0,s>t+.5&&typeof document<"u"&&document.body!==null){let r=document.createElement("span");r.style.font=e,r.style.display="inline-block",r.style.visibility="hidden",r.style.position="absolute",r.textContent="\u{1F600}",document.body.appendChild(r);let o=r.getBoundingClientRect().width;document.body.removeChild(r),s-o>.5&&(n=s-o)}return pe.set(e,n),n}function zt(e){let t=0,n=Ae();for(let u of n.segment(e))Gt(u.segment)&&t++;return t}function Ht(e,t){return t.emojiCount===void 0&&(t.emojiCount=zt(e)),t.emojiCount}function J(e,t,n){return n===0?t.width:t.width-Ht(e,t)*n}function we(e,t,n,u){if(t.graphemeWidths!==void 0)return t.graphemeWidths;let s=[],r=Ae();for(let o of r.segment(e)){let c=K(o.segment,n);s.push(J(o.segment,c,u))}return t.graphemeWidths=s.length>1?s:null,t.graphemeWidths}function be(e,t,n,u){if(t.graphemePrefixWidths!==void 0)return t.graphemePrefixWidths;let s=[],r=Ae(),o="";for(let c of r.segment(e)){o+=c.segment;let d=K(o,n);s.push(J(o,d,u))}return t.graphemePrefixWidths=s.length>1?s:null,t.graphemePrefixWidths}function Ce(e,t){let n=ge();n.font=e;let u=Rt(e),s=Tt(e),r=t?jt(e,s):0;return{cache:u,fontSize:s,emojiCorrection:r}}function ye(){Le.clear(),pe.clear(),te=null}function Q(e){return e==="space"||e==="preserved-space"||e==="tab"||e==="zero-width-break"||e==="soft-hyphen"}function Dt(e){return e==="space"}function Pe(e,t){if(t<=0)return 0;let n=e%t;return Math.abs(n)<=1e-6?t:t-n}function V(e,t,n,u){return!u||t===null?e[n]:t[n]-(n>0?t[n-1]:0)}function Me(e,t,n,u,s,r){let o=0,c=t;for(;o<e.length;){let d=r?t+e[o]:c+e[o];if((o+1<e.length?d+s:d)>n+u)break;c=d,o++}return{fitCount:o,fittedWidth:c}}function Oe(e,t){for(let n=0;n<e.chunks.length;n++){let u=e.chunks[n];if(t<u.consumedEndSegmentIndex)return n}return-1}function Kt(e,t){let n=t.segmentIndex,u=t.graphemeIndex;if(n>=e.widths.length)return null;if(u>0)return t;let s=Oe(e,n);if(s<0)return null;let r=e.chunks[s];if(r.startSegmentIndex===r.endSegmentIndex&&n===r.startSegmentIndex)return{segmentIndex:n,graphemeIndex:0};for(n<r.startSegmentIndex&&(n=r.startSegmentIndex);n<r.endSegmentIndex;){let o=e.kinds[n];if(o!=="space"&&o!=="zero-width-break"&&o!=="soft-hyphen")return{segmentIndex:n,graphemeIndex:0};n++}return r.consumedEndSegmentIndex>=e.widths.length?null:{segmentIndex:r.consumedEndSegmentIndex,graphemeIndex:0}}function ve(e,t){return e.simpleLineWalkFastPath?Jt(e,t):ne(e,t)}function Jt(e,t){let{widths:n,kinds:u,breakableWidths:s,breakablePrefixWidths:r}=e;if(n.length===0)return 0;let o=H(),c=o.lineFitEpsilon,d=0,i=0,l=!1;function k(f){let a=n[f];if(a>t&&s[f]!==null){let W=s[f],N=r[f]??null;i=0;for(let B=0;B<W.length;B++){let C=V(W,N,B,o.preferPrefixWidthsForBreakableRuns);i>0&&i+C>t+c?(d++,i=C):(i===0&&d++,i+=C)}}else i=a,d++;l=!0}for(let f=0;f<n.length;f++){let a=n[f],W=u[f];if(!l){k(f);continue}let N=i+a;if(N>t+c){if(Dt(W))continue;i=0,l=!1,k(f);continue}i=N}return l?d:d+1}function Qt(e,t,n){let{widths:u,kinds:s,breakableWidths:r,breakablePrefixWidths:o}=e;if(u.length===0)return 0;let c=H(),d=c.lineFitEpsilon,i=0,l=0,k=!1,f=0,a=0,W=0,N=0,B=-1,C=0;function R(){B=-1,C=0}function M(L=W,m=N,v=l){i++,n?.({startSegmentIndex:f,startGraphemeIndex:a,endSegmentIndex:L,endGraphemeIndex:m,width:v}),l=0,k=!1,R()}function b(L,m){k=!0,f=L,a=0,W=L+1,N=0,l=m}function y(L,m,v){k=!0,f=L,a=m,W=L,N=m+1,l=v}function O(L,m){if(!k){b(L,m);return}l+=m,W=L+1,N=0}function A(L,m){Q(s[L])&&(B=L+1,C=l-m)}function x(L){w(L,0)}function w(L,m){let v=r[L],G=o[L]??null;for(let T=m;T<v.length;T++){let j=V(v,G,T,c.preferPrefixWidthsForBreakableRuns);if(!k){y(L,T,j);continue}l+j>t+d?(M(),y(L,T,j)):(l+=j,W=L,N=T+1)}k&&W===L&&N===v.length&&(W=L+1,N=0)}let E=0;for(;E<u.length;){let L=u[E],m=s[E];if(!k){L>t&&r[E]!==null?x(E):b(E,L),A(E,L),E++;continue}if(l+L>t+d){if(Q(m)){O(E,L),M(E+1,0,l-L),E++;continue}if(B>=0){M(B,0,C);continue}if(L>t&&r[E]!==null){M(),x(E),E++;continue}M();continue}O(E,L),A(E,L),E++}return k&&M(),i}function ne(e,t,n){if(e.simpleLineWalkFastPath)return Qt(e,t,n);let{widths:u,lineEndFitAdvances:s,lineEndPaintAdvances:r,kinds:o,breakableWidths:c,breakablePrefixWidths:d,discretionaryHyphenWidth:i,tabStopAdvance:l,chunks:k}=e;if(u.length===0||k.length===0)return 0;let f=H(),a=f.lineFitEpsilon,W=0,N=0,B=!1,C=0,R=0,M=0,b=0,y=-1,O=0,A=0,x=null;function w(){y=-1,O=0,A=0,x=null}function E(h=M,g=b,S=N){W++,n?.({startSegmentIndex:C,startGraphemeIndex:R,endSegmentIndex:h,endGraphemeIndex:g,width:S}),N=0,B=!1,w()}function L(h,g){B=!0,C=h,R=0,M=h+1,b=0,N=g}function m(h,g,S){B=!0,C=h,R=g,M=h,b=g+1,N=S}function v(h,g){if(!B){L(h,g);return}N+=g,M=h+1,b=0}function G(h,g){if(!Q(o[h]))return;let S=o[h]==="tab"?0:s[h],P=o[h]==="tab"?g:r[h];y=h+1,O=N-g+S,A=N-g+P,x=o[h]}function T(h){j(h,0)}function j(h,g){let S=c[h],P=d[h]??null;for(let F=g;F<S.length;F++){let z=V(S,P,F,f.preferPrefixWidthsForBreakableRuns);if(!B){m(h,F,z);continue}N+z>t+a?(E(),m(h,F,z)):(N+=z,M=h,b=F+1)}B&&M===h&&b===S.length&&(M=h+1,b=0)}function I(h){if(x!=="soft-hyphen")return!1;let g=c[h];if(g===null)return!1;let S=f.preferPrefixWidthsForBreakableRuns?d[h]??g:g,P=S!==g,{fitCount:F,fittedWidth:z}=Me(S,N,t,a,i,P);return F===0?!1:(N=z,M=h,b=F,w(),F===g.length?(M=h+1,b=0,!0):(E(h,F,z+i),j(h,F),!0))}function p(h){W++,n?.({startSegmentIndex:h.startSegmentIndex,startGraphemeIndex:0,endSegmentIndex:h.consumedEndSegmentIndex,endGraphemeIndex:0,width:0}),w()}for(let h=0;h<k.length;h++){let g=k[h];if(g.startSegmentIndex===g.endSegmentIndex){p(g);continue}B=!1,N=0,C=g.startSegmentIndex,R=0,M=g.startSegmentIndex,b=0,w();let S=g.startSegmentIndex;for(;S<g.endSegmentIndex;){let P=o[S],F=P==="tab"?Pe(N,l):u[S];if(P==="soft-hyphen"){B&&(M=S+1,b=0,y=S+1,O=N+i,A=N+i,x=P),S++;continue}if(!B){F>t&&c[S]!==null?T(S):L(S,F),G(S,F),S++;continue}if(N+F>t+a){let X=N+(P==="tab"?0:s[S]),Y=N+(P==="tab"?F:r[S]);if(x==="soft-hyphen"&&f.preferEarlySoftHyphenBreak&&O<=t+a){E(y,0,A);continue}if(x==="soft-hyphen"&&I(S)){S++;continue}if(Q(P)&&X<=t+a){v(S,F),E(S+1,0,Y),S++;continue}if(y>=0&&O<=t+a){E(y,0,A);continue}if(F>t&&c[S]!==null){E(),T(S),S++;continue}E();continue}v(S,F),G(S,F),S++}if(B){let P=y===g.consumedEndSegmentIndex?A:N;E(g.consumedEndSegmentIndex,0,P)}}return W}function Ie(e,t,n){let u=Kt(e,t);if(u===null)return null;if(e.simpleLineWalkFastPath)return $t(e,u,n);let s=Oe(e,u.segmentIndex);if(s<0)return null;let r=e.chunks[s];if(r.startSegmentIndex===r.endSegmentIndex)return{startSegmentIndex:r.startSegmentIndex,startGraphemeIndex:0,endSegmentIndex:r.consumedEndSegmentIndex,endGraphemeIndex:0,width:0};let{widths:o,lineEndFitAdvances:c,lineEndPaintAdvances:d,kinds:i,breakableWidths:l,breakablePrefixWidths:k,discretionaryHyphenWidth:f,tabStopAdvance:a}=e,W=H(),N=W.lineFitEpsilon,B=0,C=!1,R=u.segmentIndex,M=u.graphemeIndex,b=R,y=M,O=-1,A=0,x=0,w=null;function E(){O=-1,A=0,x=0,w=null}function L(p=b,h=y,g=B){return C?{startSegmentIndex:R,startGraphemeIndex:M,endSegmentIndex:p,endGraphemeIndex:h,width:g}:null}function m(p,h){C=!0,b=p+1,y=0,B=h}function v(p,h,g){C=!0,b=p,y=h+1,B=g}function G(p,h){if(!C){m(p,h);return}B+=h,b=p+1,y=0}function T(p,h){if(!Q(i[p]))return;let g=i[p]==="tab"?0:c[p],S=i[p]==="tab"?h:d[p];O=p+1,A=B-h+g,x=B-h+S,w=i[p]}function j(p,h){let g=l[p],S=k[p]??null;for(let P=h;P<g.length;P++){let F=V(g,S,P,W.preferPrefixWidthsForBreakableRuns);if(!C){v(p,P,F);continue}if(B+F>n+N)return L();B+=F,b=p,y=P+1}return C&&b===p&&y===g.length&&(b=p+1,y=0),null}function I(p){if(w!=="soft-hyphen"||O<0)return null;let h=l[p]??null;if(h!==null){let g=W.preferPrefixWidthsForBreakableRuns?k[p]??h:h,S=g!==h,{fitCount:P,fittedWidth:F}=Me(g,B,n,N,f,S);if(P===h.length)return B=F,b=p+1,y=0,E(),null;if(P>0)return L(p,P,F+f)}return A<=n+N?L(O,0,x):null}for(let p=u.segmentIndex;p<r.endSegmentIndex;p++){let h=i[p],g=p===u.segmentIndex?u.graphemeIndex:0,S=h==="tab"?Pe(B,a):o[p];if(h==="soft-hyphen"&&g===0){C&&(b=p+1,y=0,O=p+1,A=B+f,x=B+f,w=h);continue}if(!C){if(g>0){let F=j(p,g);if(F!==null)return F}else if(S>n&&l[p]!==null){let F=j(p,0);if(F!==null)return F}else m(p,S);T(p,S);continue}if(B+S>n+N){let F=B+(h==="tab"?0:c[p]),z=B+(h==="tab"?S:d[p]);if(w==="soft-hyphen"&&W.preferEarlySoftHyphenBreak&&A<=n+N)return L(O,0,x);let X=I(p);if(X!==null)return X;if(Q(h)&&F<=n+N)return G(p,S),L(p+1,0,z);if(O>=0&&A<=n+N)return L(O,0,x);if(S>n&&l[p]!==null){let Y=L();if(Y!==null)return Y;let Se=j(p,0);if(Se!==null)return Se}return L()}G(p,S),T(p,S)}return O===r.consumedEndSegmentIndex&&y===0?L(r.consumedEndSegmentIndex,0,x):L(r.consumedEndSegmentIndex,0,B)}function $t(e,t,n){let{widths:u,kinds:s,breakableWidths:r,breakablePrefixWidths:o}=e,c=H(),d=c.lineFitEpsilon,i=0,l=!1,k=t.segmentIndex,f=t.graphemeIndex,a=k,W=f,N=-1,B=0;function C(A=a,x=W,w=i){return l?{startSegmentIndex:k,startGraphemeIndex:f,endSegmentIndex:A,endGraphemeIndex:x,width:w}:null}function R(A,x){l=!0,a=A+1,W=0,i=x}function M(A,x,w){l=!0,a=A,W=x+1,i=w}function b(A,x){if(!l){R(A,x);return}i+=x,a=A+1,W=0}function y(A,x){Q(s[A])&&(N=A+1,B=i-x)}function O(A,x){let w=r[A],E=o[A]??null;for(let L=x;L<w.length;L++){let m=V(w,E,L,c.preferPrefixWidthsForBreakableRuns);if(!l){M(A,L,m);continue}if(i+m>n+d)return C();i+=m,a=A,W=L+1}return l&&a===A&&W===w.length&&(a=A+1,W=0),null}for(let A=t.segmentIndex;A<u.length;A++){let x=u[A],w=s[A],E=A===t.segmentIndex?t.graphemeIndex:0;if(!l){if(E>0){let m=O(A,E);if(m!==null)return m}else if(x>n&&r[A]!==null){let m=O(A,0);if(m!==null)return m}else R(A,x);y(A,x);continue}if(i+x>n+d){if(Q(w))return b(A,x),C(A+1,0,i-x);if(N>=0)return C(N,0,B);if(x>n&&r[A]!==null){let m=C();if(m!==null)return m;let v=O(A,0);if(v!==null)return v}return C()}b(A,x),y(A,x)}return C()}var re=null,xe=new WeakMap;function Te(){return re===null&&(re=new Intl.Segmenter(void 0,{granularity:"grapheme"})),re}function Ut(e){return e?{widths:[],lineEndFitAdvances:[],lineEndPaintAdvances:[],kinds:[],simpleLineWalkFastPath:!0,segLevels:null,breakableWidths:[],breakablePrefixWidths:[],discretionaryHyphenWidth:0,tabStopAdvance:0,chunks:[],segments:[]}:{widths:[],lineEndFitAdvances:[],lineEndPaintAdvances:[],kinds:[],simpleLineWalkFastPath:!0,segLevels:null,breakableWidths:[],breakablePrefixWidths:[],discretionaryHyphenWidth:0,tabStopAdvance:0,chunks:[]}}function Ge(e,t,n){let u=Te(),s=H(),{cache:r,emojiCorrection:o}=Ce(t,Fe(e.normalized)),c=J("-",K("-",r),o),i=J(" ",K(" ",r),o)*8;if(e.len===0)return Ut(n);let l=[],k=[],f=[],a=[],W=e.chunks.length<=1,N=n?[]:null,B=[],C=[],R=n?[]:null,M=Array.from({length:e.len}),b=Array.from({length:e.len});function y(x,w,E,L,m,v,G,T){m!=="text"&&m!=="space"&&m!=="zero-width-break"&&(W=!1),l.push(w),k.push(E),f.push(L),a.push(m),N?.push(v),B.push(G),C.push(T),R!==null&&R.push(x)}for(let x=0;x<e.len;x++){M[x]=l.length;let w=e.texts[x],E=e.isWordLike[x],L=e.kinds[x],m=e.starts[x];if(L==="soft-hyphen"){y(w,0,c,c,L,m,null,null),b[x]=l.length;continue}if(L==="hard-break"){y(w,0,0,0,L,m,null,null),b[x]=l.length;continue}if(L==="tab"){y(w,0,0,0,L,m,null,null),b[x]=l.length;continue}let v=K(w,r);if(L==="text"&&v.containsCJK){let I="",p=0;for(let h of u.segment(w)){let g=h.segment;if(I.length===0){I=g,p=h.index;continue}if(Z.has(I)||ce.has(g)||$.has(g)||s.carryCJKAfterClosingQuote&&D(g)&&he(I)){I+=g;continue}let S=K(I,r),P=J(I,S,o);y(I,P,P,P,"text",m+p,null,null),I=g,p=h.index}if(I.length>0){let h=K(I,r),g=J(I,h,o);y(I,g,g,g,"text",m+p,null,null)}b[x]=l.length;continue}let G=J(w,v,o),T=L==="space"||L==="preserved-space"||L==="zero-width-break"?0:G,j=L==="space"||L==="zero-width-break"?0:G;if(E&&w.length>1){let I=we(w,v,r,o),p=s.preferPrefixWidthsForBreakableRuns?be(w,v,r,o):null;y(w,G,T,j,L,m,I,p)}else y(w,G,T,j,L,m,null,null);b[x]=l.length}let O=_t(e.chunks,M,b),A=N===null?null:ke(e.normalized,N);return R!==null?{widths:l,lineEndFitAdvances:k,lineEndPaintAdvances:f,kinds:a,simpleLineWalkFastPath:W,segLevels:A,breakableWidths:B,breakablePrefixWidths:C,discretionaryHyphenWidth:c,tabStopAdvance:i,chunks:O,segments:R}:{widths:l,lineEndFitAdvances:k,lineEndPaintAdvances:f,kinds:a,simpleLineWalkFastPath:W,segLevels:A,breakableWidths:B,breakablePrefixWidths:C,discretionaryHyphenWidth:c,tabStopAdvance:i,chunks:O}}function _t(e,t,n){let u=[];for(let s=0;s<e.length;s++){let r=e[s],o=r.startSegmentIndex<t.length?t[r.startSegmentIndex]:n[n.length-1]??0,c=r.endSegmentIndex<t.length?t[r.endSegmentIndex]:n[n.length-1]??0,d=r.consumedEndSegmentIndex<t.length?t[r.consumedEndSegmentIndex]:n[n.length-1]??0;u.push({startSegmentIndex:o,endSegmentIndex:c,consumedEndSegmentIndex:d})}return u}function je(e,t,n,u){let s=de(e,H(),u?.whiteSpace);return Ge(s,t,n)}function qt(e,t,n){let u=performance.now(),s=de(e,H(),n?.whiteSpace),r=performance.now(),o=Ge(s,t,!1),c=performance.now(),d=0;for(let i of o.breakableWidths)i!==null&&d++;return{analysisMs:r-u,measureMs:c-r,totalMs:c-u,analysisSegments:s.len,preparedSegments:o.widths.length,breakableSegments:d}}function Zt(e,t,n){return je(e,t,!1,n)}function Vt(e,t,n){return je(e,t,!0,n)}function Xt(e,t,n){let u=ve(e,t);return{lineCount:u,height:u*n}}function Re(e,t,n){let u=n.get(e);if(u!==void 0)return u;u=[];let s=Te();for(let r of s.segment(t[e]))u.push(r.segment);return n.set(e,u),u}function ze(e){let t=xe.get(e);return t!==void 0||(t=new Map,xe.set(e,t)),t}function Yt(e,t,n,u){return u>0&&e[u-1]==="soft-hyphen"&&!(t===u&&n>0)}function en(e,t,n,u,s,r,o){let c="",d=Yt(t,u,s,r);for(let i=u;i<r;i++)t[i]==="soft-hyphen"||t[i]==="hard-break"||(i===u&&s>0?c+=Re(i,e,n).slice(s).join(""):c+=e[i]);return o>0?(d&&(c+="-"),c+=Re(r,e,n).slice(u===r?s:0,o).join("")):d&&(c+="-"),c}function He(e,t,n,u,s,r,o){return{text:en(e.segments,e.kinds,t,u,s,r,o),width:n,start:{segmentIndex:u,graphemeIndex:s},end:{segmentIndex:r,graphemeIndex:o}}}function tn(e,t,n){return He(e,t,n.width,n.startSegmentIndex,n.startGraphemeIndex,n.endSegmentIndex,n.endGraphemeIndex)}function De(e){return{width:e.width,start:{segmentIndex:e.startSegmentIndex,graphemeIndex:e.startGraphemeIndex},end:{segmentIndex:e.endSegmentIndex,graphemeIndex:e.endGraphemeIndex}}}function nn(e,t,n){let u=Ie(e,t,n);return u===null?null:De(u)}function rn(e,t){return He(e,ze(e),t.width,t.start.segmentIndex,t.start.graphemeIndex,t.end.segmentIndex,t.end.graphemeIndex)}function sn(e,t,n){return e.widths.length===0?0:ne(e,t,u=>{n(De(u))})}function un(e,t,n){let u=nn(e,t,n);return u===null?null:rn(e,u)}function on(e,t,n){let u=[];if(e.widths.length===0)return{lineCount:0,height:0,lines:u};let s=ze(e),r=ne(e,t,o=>{u.push(tn(e,s,o))});return{lineCount:r,height:r*n,lines:u}}function Ke(){me(),re=null,xe=new WeakMap,ye()}function ln(e){Be(e),Ke()}return qe(cn);})();
+
+</script>
+<script>
+const { prepare, layout, clearCache } = Pretext;
+
+let state = {
+  text: '',
+  fontFamily: "'Syne', sans-serif",
+  fontWeight: '800',
+  fontStyle: 'normal',
+  paperW: 210,
+  paperH: 297,
+  textColor: '#0a0a0a',
+  align: 'left',
+  currentFontSize: 0,
+  currentLines: 0,
+  activeGroup: 'font', // track which group set the font
+}
+
+const textInput = document.getElementById('textInput')
+const page = document.getElementById('page')
+const pageText = document.getElementById('pageText')
+const fontSizeStat = document.getElementById('fontSizeStat')
+const linesStat = document.getElementById('linesStat')
+const fillStat = document.getElementById('fillStat')
+const loading = document.getElementById('loading')
+
+const MM_TO_PX = 3.7795275591
+const PADDING_RATIO = 0.07
+
+function getPageDimensions() {
+  return { w: state.paperW * MM_TO_PX, h: state.paperH * MM_TO_PX }
+}
+
+function getScaledPageSize() {
+  const { w, h } = getPageDimensions()
+  const area = document.querySelector('.preview-area')
+  const maxW = area.clientWidth - 96
+  const maxH = area.clientHeight - 96
+  const scale = Math.min(maxW / w, maxH / h, 1)
+  return { width: w * scale, height: h * scale, scale }
+}
+
+function buildFontString(size) {
+  let s = ''
+  if (state.fontStyle === 'italic') s += 'italic '
+  s += state.fontWeight + ' '
+  s += size + 'px '
+  s += state.fontFamily
+  return s
+}
+
+function findMaxFontSize(text, containerW, containerH) {
+  const px = containerW * PADDING_RATIO
+  const py = containerH * PADDING_RATIO
+  const availW = containerW - (px * 2)
+  const availH = containerH - (py * 2)
+
+  const words = text.trim().split(/\s+/)
+
+  let lo = 8, hi = 800, bestSize = lo, bestLines = 1
+
+  for (let i = 0; i < 30; i++) {
+    const mid = Math.floor((lo + hi) / 2)
+    if (mid <= lo) break
+
+    const lineHeight = mid * 1.1
+    const font = buildFontString(mid)
+
+    try {
+      // Check that every individual word fits on one line at this font size.
+      // This prevents Pretext from breaking words mid-character.
+      let anyWordBroken = false
+      for (let w = 0; w < words.length; w++) {
+        const wp = prepare(words[w], font)
+        const wr = layout(wp, availW, lineHeight)
+        if (wr.lineCount > 1) {
+          anyWordBroken = true
+          break
+        }
+      }
+
+      if (anyWordBroken) {
+        hi = mid
+        continue
+      }
+
+      const prepared = prepare(text, font)
+      const result = layout(prepared, availW, lineHeight)
+
+      if (result.height <= availH) {
+        bestSize = mid
+        bestLines = result.lineCount
+        lo = mid
+      } else {
+        hi = mid
+      }
+    } catch (e) {
+      hi = mid
+    }
+  }
+
+  return { fontSize: bestSize, lineCount: bestLines }
+}
+
+function render() {
+  const { width, height, scale } = getScaledPageSize()
+  page.style.width = width + 'px'
+  page.style.height = height + 'px'
+
+  // Scale poster decorations
+  const decorScale = Math.min(scale, 0.8)
+  document.querySelectorAll('.poster-tag').forEach(el => {
+    el.style.fontSize = Math.max(7, 9 * decorScale) + 'px'
+  })
+  document.querySelectorAll('.poster-credits, .poster-credits-right').forEach(el => {
+    el.style.fontSize = Math.max(5, 7 * decorScale) + 'px'
+  })
+
+  if (!state.text.trim()) {
+    pageText.innerHTML = '<span class="empty-state">Type a message<br>to begin</span>'
+    pageText.style.fontSize = ''
+    pageText.style.fontFamily = ''
+    pageText.style.fontWeight = ''
+    pageText.style.fontStyle = ''
+    pageText.style.lineHeight = ''
+    pageText.style.color = ''
+    fontSizeStat.textContent = '\u2014'
+    linesStat.textContent = '\u2014'
+    fillStat.textContent = '\u2014'
+    return
+  }
+
+  const { w: realW, h: realH } = getPageDimensions()
+  const { fontSize, lineCount } = findMaxFontSize(state.text, realW, realH)
+
+  const scaledFontSize = fontSize * scale
+  const scaledLineHeight = fontSize * 1.1 * scale
+
+  state.currentFontSize = fontSize
+  state.currentLines = lineCount
+
+  pageText.textContent = state.text
+  pageText.style.fontSize = scaledFontSize + 'px'
+  pageText.style.fontFamily = state.fontFamily
+  pageText.style.fontWeight = state.fontWeight
+  pageText.style.fontStyle = state.fontStyle
+  pageText.style.lineHeight = scaledLineHeight + 'px'
+  pageText.style.color = state.textColor
+  pageText.className = 'page-text align-' + state.align
+
+  fontSizeStat.textContent = fontSize + 'px'
+  linesStat.textContent = lineCount
+  const rLH = fontSize * 1.1
+  const py = realH * PADDING_RATIO
+  const availH = realH - (py * 2)
+  const fill = Math.min(100, Math.round((lineCount * rLH / availH) * 100))
+  fillStat.textContent = fill + '%'
+}
+
+let renderTimeout
+function debouncedRender() {
+  clearTimeout(renderTimeout)
+  renderTimeout = setTimeout(render, 16)
+}
+
+// Ensure Google Fonts are loaded before measuring
+async function fontSafeRender() {
+  try {
+    await document.fonts.ready
+  } catch(e) {}
+  render()
+}
+
+textInput.addEventListener('input', () => {
+  state.text = textInput.value
+  debouncedRender()
+})
+
+// Font group (Sans / Serif / Mono)
+document.getElementById('fontGroup').addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-option')
+  if (!btn) return
+  document.querySelectorAll('#fontGroup .btn-option').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  // Deactivate variant group
+  document.querySelectorAll('#variantGroup .btn-option').forEach(b => b.classList.remove('active'))
+  state.fontFamily = btn.dataset.font
+  state.fontWeight = btn.dataset.weight
+  state.fontStyle = btn.dataset.style || 'normal'
+  state.activeGroup = 'font'
+  clearCache()
+  fontSafeRender()
+})
+
+// Variant group (Bold / Italic / Tall / Classic)
+document.getElementById('variantGroup').addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-option')
+  if (!btn) return
+  document.querySelectorAll('#variantGroup .btn-option').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  // Deactivate font group
+  document.querySelectorAll('#fontGroup .btn-option').forEach(b => b.classList.remove('active'))
+  state.fontFamily = btn.dataset.font
+  state.fontWeight = btn.dataset.weight
+  state.fontStyle = btn.dataset.style || 'normal'
+  state.activeGroup = 'variant'
+  clearCache()
+  fontSafeRender()
+})
+
+document.getElementById('sizeGroup').addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-option')
+  if (!btn) return
+  document.querySelectorAll('#sizeGroup .btn-option').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  state.paperW = parseInt(btn.dataset.w)
+  state.paperH = parseInt(btn.dataset.h)
+  debouncedRender()
+})
+
+document.getElementById('colorGroup').addEventListener('click', (e) => {
+  const dot = e.target.closest('.color-dot')
+  if (!dot) return
+  document.querySelectorAll('#colorGroup .color-dot').forEach(d => d.classList.remove('active'))
+  dot.classList.add('active')
+  state.textColor = dot.dataset.color
+  debouncedRender()
+})
+
+document.getElementById('customColor').addEventListener('input', (e) => {
+  document.querySelectorAll('#colorGroup .color-dot').forEach(d => d.classList.remove('active'))
+  state.textColor = e.target.value
+  debouncedRender()
+})
+
+document.getElementById('alignGroup').addEventListener('click', (e) => {
+  const btn = e.target.closest('.align-option')
+  if (!btn) return
+  document.querySelectorAll('#alignGroup .align-option').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  state.align = btn.dataset.align
+  debouncedRender()
+})
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  if (!state.text.trim()) return
+  const fontSize = state.currentFontSize
+  const lineHeight = fontSize * 1.1
+  const isLandscape = state.paperW > state.paperH
+
+  const pw = window.open('', '_blank')
+  pw.document.write('<!DOCTYPE html><html><head>' +
+    '<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;700&family=Syne:wght@400;800&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,900;1,700&family=Inter:wght@900&family=Space+Mono:wght@700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">' +
+    '<style>' +
+    '@page { size: ' + (isLandscape ? state.paperH + 'mm ' + state.paperW + 'mm landscape' : state.paperW + 'mm ' + state.paperH + 'mm') + '; margin: 0; }' +
+    '* { margin: 0; padding: 0; box-sizing: border-box; }' +
+    'body { width: ' + state.paperW + 'mm; height: ' + state.paperH + 'mm; display: flex; align-items: center; padding: 7%; }' +
+    '.text { width: 100%; font-family: ' + state.fontFamily + '; font-weight: ' + state.fontWeight + '; font-style: ' + state.fontStyle + '; font-size: ' + fontSize + 'px; line-height: ' + lineHeight + 'px; color: ' + state.textColor + '; text-align: ' + state.align + '; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; }' +
+    '</style></head><body>' +
+    '<div class="text">' + state.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' +
+    '</body></html>')
+  pw.document.close()
+  setTimeout(() => { pw.print() }, 600)
+})
+
+window.addEventListener('resize', debouncedRender)
+
+// Init
+loading.classList.add('hidden')
+setTimeout(() => loading.remove(), 500)
+
+// Wait for fonts then render
+fontSafeRender()
+</script>
+
+</body>
+</html>
